@@ -2,27 +2,38 @@
 
 import logging
 import os
-from discord.ext import commands
 
-from discord import Intents
+import discord
+from discord import Intents, app_commands, Client
 from helpers import (
-    parseJSON,
-    createFighterRankEmbed,
-    getFighterNumber,
-    createInfoEmbed,
+    parse_JSON,
+    create_fighter_rank_embed,
+    get_fighter_number,
+    create_help_embed,
 )
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 ME_BOT_NAME = "2.5 Magic Eden Bot"
 
-RANKS = parseJSON("volya_ranks.json")
+RANKS = parse_JSON("volya_ranks.json")
 
 
-class RankerBot(commands.Bot):
+class RankerBot(Client):
     """Ranker Bot class."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.synced = False
 
     async def on_ready(self):
         """Make sure the bot is ready."""
+        logging.debug("Logging in.")
+        await self.wait_until_ready()
+        logging.debug("Syncing slash commands.")
+        if not self.synced:
+            await tree.sync(guild=discord.Object(id=947791831582793748))
+            self.synced = True
+            logging.debug("Slash commands synced.")
         logging.debug(f"Logged on as {self.user}!")
 
     async def on_message(self, message):
@@ -32,67 +43,46 @@ class RankerBot(commands.Bot):
             and message.author.name.lower() == ME_BOT_NAME.lower()
             and len(message.embeds) > 0
         ):
-            fighter_number = getFighterNumber(message)
+            fighter_number = get_fighter_number(message)
             channel = message.channel
 
             # Post rank and tier embed.
             if fighter_number is not None:
-                embed = await createFighterRankEmbed(fighter_number, RANKS)
+                embed = await create_fighter_rank_embed(fighter_number, RANKS)
                 await channel.send(embed=embed)
-
-        # Make sure commands are processed
-        await self.process_commands(message)
-
-
-def parseRankerCommandArgs(message, command_prefix, command):
-    """Parse ranker command arguments.
-
-    Args:
-        message (str): Message content.
-        command_prefix (str): Command prefix.
-        command (str): Command name.
-
-    Returns:
-        int: freedom fighter number. Returns None if command could not be parsed.
-    
-    Throws:
-        ValueError: If arguments are invalid.
-    """    
-    args = message.replace(command_prefix + command, "").split(" ")
-    args = [arg for arg in args if arg]
-    args = [arg.strip() for arg in args]
-
-    # Check if args are valid.
-    if len(args) != 1:
-        raise ValueError("Please specify a single fighter number and try again.・🤖")
-    if not args[0].isdigit():
-        raise ValueError("Please specify a integer and try again.・🤖")
-    if int(args[0]) <= 0:
-        raise ValueError("Fighter number has to be between 1 and 5000.・😅")
-    if int(args[0]) > 5000:
-        raise ValueError("Fighter number has to be between 1 and 5000.・😅")
-    return int(args[0])
 
 
 if __name__ == "__main__":
     intents = Intents.default()
     intents.message_content = True
 
-    client = RankerBot(intents=intents, command_prefix="!")
+    # Create bot.
+    client = RankerBot(intents=intents)
+    tree = app_commands.CommandTree(client)
 
-    # Add commands.
-    @client.command()
-    async def volyaRank(ctx):
-        try:
-            args = parseRankerCommandArgs(
-                ctx.message.content, ctx.clean_prefix, ctx.invoked_with
-            )
-        except Exception as e:
-            await ctx.message.channel.send(embed=createInfoEmbed(e.args[0]))
-            return
+    # Add help command.
+    @tree.command(
+        name="help",
+        description="Get information about our Ranker bot.",
+        guild=discord.Object(id=947791831582793748),
+    )
+    async def help(
+        interaction: discord.Interaction,
+    ):
+        await interaction.response.send_message(embed=await create_help_embed())
 
-        # Create and send rank embed.
-        embed = await createFighterRankEmbed(args, RANKS)
-        await ctx.message.channel.send(embed=embed)
+    # Add rank command.
+    @tree.command(
+        name="rank",
+        description="Check the rank and rarity tier of your Freedom Fighter.",
+        guild=discord.Object(id=947791831582793748),
+    )
+    async def rank(
+        interaction: discord.Interaction,
+        tokenid: app_commands.Range[int, 1, 5000],
+    ):
+        await interaction.response.send_message(
+            embed=await create_fighter_rank_embed(tokenid, RANKS)
+        )
 
     client.run(BOT_TOKEN)

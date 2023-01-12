@@ -42,7 +42,7 @@ TIER_COLORS = {
 }
 
 
-def parseJSON(file):
+def parse_JSON(file):
     """Parse JSON data.
 
     Args:
@@ -59,7 +59,7 @@ def parseJSON(file):
     return parsed_data
 
 
-def getTierColor(tier):
+def get_tier_color(tier):
     """Get tier color.
 
     Args:
@@ -77,7 +77,7 @@ def getTierColor(tier):
         raise Exception(f"Tier {tier} not found.")
 
 
-def getTierEmoji(tier):
+def get_tier_emoji(tier):
     """Get tier emoji string.
 
     Args:
@@ -95,7 +95,7 @@ def getTierEmoji(tier):
         raise Exception(f"Tier {tier} not found.")
 
 
-def getFighterNumber(magiceden_message):
+def get_fighter_number(magiceden_message):
     """Get fighter number from ME message.
 
     Args:
@@ -114,7 +114,7 @@ def getFighterNumber(magiceden_message):
     return int(fighter_number)
 
 
-def getFighterRank(rank_dict, fighter_number):
+def get_fighter_rank(rank_dict, fighter_number):
     """Get fighter rank.
 
     Args:
@@ -130,7 +130,7 @@ def getFighterRank(rank_dict, fighter_number):
         return None
 
 
-def createRankEmbed(fighter_rank, fighter_tier):
+def create_rank_embed(fighter_rank, fighter_tier):
     """Create not found embed.
 
     Args:
@@ -141,12 +141,12 @@ def createRankEmbed(fighter_rank, fighter_tier):
         discord.Embed: Embed object.
     """
     return Embed(
-        title=(f"🏆・Rank: {fighter_rank} ・ " "{}".format(getTierEmoji(fighter_tier))),
-        color=Color.from_str(getTierColor(fighter_tier)),
+        title=(f"🏆・Rank: {fighter_rank} ・ " "{}".format(get_tier_emoji(fighter_tier))),
+        color=Color.from_str(get_tier_color(fighter_tier)),
     )
 
 
-def createInfoEmbed(text):
+def create_info_embed(text):
     """Create info embed.
 
     Args:
@@ -155,10 +155,14 @@ def createInfoEmbed(text):
     Returns:
         discord.Embed: Embed object.
     """
-    return Embed(title=(f":information_source:・{text}"))
+    return Embed(
+        title="📢・Info",
+        description=text, 
+        color=Color.from_str("#00b3ff")
+    )
 
 
-def createNotFoundEmbed(fighter_number):
+def create_not_found_embed(fighter_number):
     """Create not found embed.
 
     Args:
@@ -167,12 +171,12 @@ def createNotFoundEmbed(fighter_number):
     Returns:
         discord.Embed: Embed object.
     """
-    return createInfoEmbed(
+    return create_info_embed(
         f"Rank of Freedom Fighter `{fighter_number}` could not be found.・🤔"
     )
 
 
-async def createFighterRankEmbed(fighter_number, ranks_dict):
+async def create_fighter_rank_embed(fighter_number, ranks_dict):
     """Create fighter rank embed message.
 
     Args:
@@ -182,8 +186,27 @@ async def createFighterRankEmbed(fighter_number, ranks_dict):
     Returns:
         discord.Embed: Discord embed message.
     """
-    fighter_rank = getFighterRank(ranks_dict, fighter_number)
+    fighter_rank = get_fighter_rank(ranks_dict, fighter_number)
     if fighter_rank is None:  # If not found.
         logging.warning(f"Rank of Fighter `{fighter_number}` not found.")
-        return createNotFoundEmbed(fighter_number)
-    return createRankEmbed(fighter_rank["rank"], fighter_rank["tier"])
+        return create_not_found_embed(fighter_number)
+    return create_rank_embed(fighter_rank["rank"], fighter_rank["tier"])
+
+
+async def create_help_embed():
+    return Embed(
+        title=":question:・Help",
+        description=(
+            """A simple bot that can be used to check the rank of your VOLYA Freedom 
+            Fighter. 🤖💎 
+
+            It uses the rarity calculation provided by https://solrarity.app/dashboard
+            but is adjusted so that the rarity tier of the  `1/1` is shown correctly.
+            If you have any suggestions or experience problems, feel free to drop them
+            in the <#1003297324187013141> channel! 🔥
+
+            **Commands**
+                ⦁ `/rank <fighter_number>`: Get the rank of a fighter.
+            """
+        ),
+    )
