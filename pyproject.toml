@@ -1,0 +1,10 @@
+[project]
+name = "volya_ranker_discord_bot"
+description = "A discord bot that can be used to get the rank and tier of a VOLYA NFT."
+version = "1.0.0"
+authors = [
+    { name = "Rick Staa", email = "rick.staa@outlook.com" }
+]
+dependencies = [
+    "discord.py",
+]
