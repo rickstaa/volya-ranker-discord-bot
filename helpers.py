@@ -52,10 +52,11 @@ def parseJSON(file):
         dict: Python dictionary.
     """
     data = json.load(open(file, "r"))
-    return {
-        re.search(r"(?<=Freedom Fighter #)(\d+)", data[i]["name"]).group(): data[i + 1]
-        for i in range(0, len(data), 2)
+    parsed_data = {
+        re.search(r"(?<=Freedom Fighter #)(\d+)", data[i]["name"]).group(): data[i]
+        for i in range(0, len(data), 1)
     }
+    return parsed_data
 
 
 def getTierColor(tier):
@@ -145,6 +146,18 @@ def createRankEmbed(fighter_rank, fighter_tier):
     )
 
 
+def createInfoEmbed(text):
+    """Create info embed.
+
+    Args:
+        text (string): Info text.
+
+    Returns:
+        discord.Embed: Embed object.
+    """
+    return Embed(title=(f":information_source:・{text}"))
+
+
 def createNotFoundEmbed(fighter_number):
     """Create not found embed.
 
@@ -154,8 +167,8 @@ def createNotFoundEmbed(fighter_number):
     Returns:
         discord.Embed: Embed object.
     """
-    return Embed(
-        title=(f"🏆・Rank of Freedom Fighter {fighter_number} could not be " "found 🤔.",)
+    return createInfoEmbed(
+        f"Rank of Freedom Fighter `{fighter_number}` could not be found.・🤔"
     )
 
 
@@ -171,6 +184,6 @@ async def createFighterRankEmbed(fighter_number, ranks_dict):
     """
     fighter_rank = getFighterRank(ranks_dict, fighter_number)
     if fighter_rank is None:  # If not found.
-        logging.warning(f"Rank of Fighter {fighter_number} not found.")
+        logging.warning(f"Rank of Fighter `{fighter_number}` not found.")
         return createNotFoundEmbed(fighter_number)
     return createRankEmbed(fighter_rank["rank"], fighter_rank["tier"])
