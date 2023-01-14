@@ -6,16 +6,16 @@ import os
 import discord
 from discord import Intents, app_commands, Client
 from helpers import (
-    parse_JSON,
     create_fighter_rank_embed,
     get_fighter_number,
     create_help_embed,
+    get_volya_ranks
 )
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 ME_BOT_NAME = "2.5 Magic Eden Bot"
 
-RANKS = parse_JSON("volya_ranks.json")
+RANKS = get_volya_ranks()
 
 
 class RankerBot(Client):

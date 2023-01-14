@@ -4,6 +4,7 @@ import json
 import re
 from discord import Embed, Color
 import logging
+from math import floor
 
 TIER_EMOJIS = {
     "myth": (
@@ -40,6 +41,50 @@ TIER_COLORS = {
     "uncommon": "#189e66",
     "common": "#4e5558",
 }
+
+
+def get_volya_ranks():
+    """Get Volya ranks from solrarity JSON file and correct them for missing 1/1s.
+
+    Returns:
+        dict: Corrected volya ranks.
+    """
+
+    # Get SolRanker NFT ranks.
+    solrarity_ranks = parse_JSON("./assets/volya_solrarity_ranks.json")
+
+    # Get incorrectly ranked NFTs.
+    rank_corrections = parse_JSON("./assets/rank_corrections.json")
+
+    # Remove incorrectly ranked NFTs.
+    for fighter_number in rank_corrections:
+        del solrarity_ranks[fighter_number]
+
+    # Prepend correct ranks.
+    volya_ranks = {**rank_corrections, **solrarity_ranks}
+
+    # Update ranks and tiers.
+    # NOTE: Percentages taken from solrarity discord FAQ channel.
+    for idx, (fighter, _) in enumerate(volya_ranks.items()):
+        rank = idx + 1
+        volya_ranks[fighter]["rank"] = rank
+        if rank <= floor(0.01 * len(volya_ranks)):
+            volya_ranks[fighter]["tier"] = "Mythic"
+        elif rank <= floor(0.05 * len(volya_ranks)):
+            volya_ranks[fighter]["tier"] = "Legendary"
+        elif rank <= floor(0.15 * len(volya_ranks)):
+            volya_ranks[fighter]["tier"] = "Epic"
+        elif rank <= floor(0.35 * len(volya_ranks)):
+            volya_ranks[fighter]["tier"] = "Rare"
+        elif rank <= floor(0.6 * len(volya_ranks)):
+            volya_ranks[fighter]["tier"] = "Uncommon"
+        else:
+            volya_ranks[fighter]["tier"] = "Common"
+
+    with open("sample.json", "w") as outfile:
+        json.dump(volya_ranks, outfile)
+
+    return volya_ranks
 
 
 def parse_JSON(file):
@@ -155,11 +200,7 @@ def create_info_embed(text):
     Returns:
         discord.Embed: Embed object.
     """
-    return Embed(
-        title="📢・Info",
-        description=text, 
-        color=Color.from_str("#00b3ff")
-    )
+    return Embed(title="📢・Info", description=text, color=Color.from_str("#00b3ff"))
 
 
 def create_not_found_embed(fighter_number):
