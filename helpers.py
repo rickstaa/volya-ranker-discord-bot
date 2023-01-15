@@ -7,7 +7,7 @@ import logging
 from math import floor
 
 TIER_EMOJIS = {
-    "myth": (
+    "mythic": (
         "<:mythic1:1063075588002304041><:mythic2:1063075586433630271>"
         "<:mythic3:1063075585166950420><:mythic4:1063075582943965244>"
     ),
@@ -34,12 +34,21 @@ TIER_EMOJIS = {
 }
 
 TIER_COLORS = {
-    "myth": "#9f0d19",
+    "mythic": "#9f0d19",
     "legendary": "#b35a00",
     "epic": "#6f01b4",
     "rare": "#007db3",
     "uncommon": "#189e66",
     "common": "#4e5558",
+}
+
+TIER_SNIPER_ROLES = {
+    "mythic": "1063954538521952257",
+    "legendary": "1063954755442982943",
+    "epic": "1063954819896836166",
+    "rare": "1063954910544150639",
+    "uncommon": "1063954980421255300",
+    "common": "1063955086776217690",
 }
 
 
@@ -105,7 +114,7 @@ def parse_JSON(file):
 
 
 def get_tier_color(tier):
-    """Get tier color.
+    """Get rarity tier color.
 
     Args:
         tier (str): Rarity tier.
@@ -123,7 +132,7 @@ def get_tier_color(tier):
 
 
 def get_tier_emoji(tier):
-    """Get tier emoji string.
+    """Get rarity tier emoji string.
 
     Args:
         tier (str): Rarity tier.
@@ -175,20 +184,11 @@ def get_fighter_rank(rank_dict, fighter_number):
         return None
 
 
-def create_rank_embed(fighter_rank, fighter_tier):
-    """Create not found embed.
-
-    Args:
-        fighter_number (int): Fighter rank.
-        fighter_number (str): Fighter tier.
-
-    Returns:
-        discord.Embed: Embed object.
-    """
-    return Embed(
-        title=(f"🏆・Rank: {fighter_rank} ・ " "{}".format(get_tier_emoji(fighter_tier))),
-        color=Color.from_str(get_tier_color(fighter_tier)),
-    )
+def get_tier_sniper_role(tier):
+    try:
+        return "@&{}".format(TIER_SNIPER_ROLES[tier.lower()])
+    except KeyError:
+        return None
 
 
 def create_info_embed(text):
@@ -204,50 +204,95 @@ def create_info_embed(text):
 
 
 def create_not_found_embed(fighter_number):
-    """Create not found embed.
+    """Create fighter not found embed object.
 
     Args:
         fighter_number (int): Fighter number.
 
     Returns:
-        discord.Embed: Embed object.
+        discord.Embed: Fighter not found embed object.
     """
     return create_info_embed(
         f"Rank of Freedom Fighter `{fighter_number}` could not be found.・🤔"
     )
 
 
-async def create_fighter_rank_embed(fighter_number, ranks_dict):
+def create_rank_embed(fighter_rank, fighter_tier, mention=False):
+    """Create rank embed.
+
+    Args:
+        fighter_number (int): Fighter rank.
+        fighter_number (str): Fighter tier.
+        mention (bool, optional): Mention tier sniper role. Defaults to False.
+
+    Returns:
+        discord.Embed: Rank embed object.
+    """
+    rank_embed = Embed(
+        title=("🏆・Rank: {} ・ {}".format(fighter_rank, get_tier_emoji(fighter_tier))),
+        color=Color.from_str(get_tier_color(fighter_tier)),
+    )
+    if mention:
+        rank_embed.add_field(
+            name="", value="<@&{}>".format(TIER_SNIPER_ROLES[fighter_tier.lower()])
+        )
+    return rank_embed
+
+
+async def create_fighter_rank_embed(fighter_number, ranks_dict, mention=False):
     """Create fighter rank embed message.
 
     Args:
         fighter_number (int): Fighter number.
         ranks_dict (dict): Rank dictionary.
+        mention (bool, optional): Mention tier sniper role. Defaults to False.
 
     Returns:
-        discord.Embed: Discord embed message.
+        discord.Embed: Discord fighter rank embed message or fighter not found embed
+            message.
     """
     fighter_rank = get_fighter_rank(ranks_dict, fighter_number)
     if fighter_rank is None:  # If not found.
         logging.warning(f"Rank of Fighter `{fighter_number}` not found.")
         return create_not_found_embed(fighter_number)
-    return create_rank_embed(fighter_rank["rank"], fighter_rank["tier"])
+    return create_rank_embed(fighter_rank["rank"], fighter_rank["tier"], mention)
+
+
+async def create_sniper_action_embed(tier, action):
+    """Create sniper action embed.
+
+    Args:
+        tier (string): Fighter tier.
+        action (int): Role action. Options are 'enable' or 'disable' (i.e. 1 or 0).
+
+    Returns:
+        discord.Embed: Sniper discord embed message.
+    """
+    return Embed(
+        title=":eyes:・`{}` fighter sniper `{}`.".format(
+            tier.capitalize(), "enabled" if action else "disabled"
+        ),
+        color=Color.from_str(get_tier_color(tier)),
+    )
 
 
 async def create_help_embed():
     return Embed(
         title=":question:・Help",
         description=(
-            """A simple bot that can be used to check the rank of your VOLYA Freedom 
-            Fighter. 🤖💎 
-
-            It uses the rarity calculation provided by https://solrarity.app/dashboard
-            but is adjusted so that the rarity tier of the  `1/1` is shown correctly.
-            If you have any suggestions or experience problems, feel free to drop them
-            in the <#1003297324187013141> channel! 🔥
-
-            **Commands**
-                ⦁ `/rank <fighter_number>`: Get the rank of a fighter.
-            """
+            "A simple bot that can be used to check the rank of your VOLYA Freedom "
+            "Fighter. 🤖💎"
+            "\n\n"
+            "It uses the rarity calculation provided by "
+            "https://solrarity.app/dashboard but is adjusted so that the rarity tier "
+            "of the `1/1` is shown correctly."
+            "\n\n"
+            "If you have any suggestions or experience problems, feel free to drop "
+            "them in the <#1003297324187013141> channel! 🔥"
+            "\n\n"
+            "**Commands**\n"
+            "> ⦁ `/rank <fighter_number>`: Get the rank of a fighter.\n"
+            "> ⦁ `/sniper <tier> <enable/disable>`: Enable/disable tier sniper role. "
+            "If enabled, you will be mentioned when a specified tier fighter is listed."
         ),
     )
