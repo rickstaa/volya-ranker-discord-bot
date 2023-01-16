@@ -80,7 +80,9 @@ if __name__ == "__main__":
     async def help(
         interaction: Interaction,
     ):
-        await interaction.response.send_message(embed=await create_help_embed())
+        await interaction.response.send_message(
+            embed=await create_help_embed(), ephemeral=True
+        )
 
     # Add rank command.
     @tree.command(
