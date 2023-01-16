@@ -118,14 +118,16 @@ if __name__ == "__main__":
         if action == 1:
             await interaction.user.add_roles(discord.Object(id=TIER_SNIPER_ROLES[tier]))
             await interaction.response.send_message(
-                embed=await create_sniper_action_embed(tier=tier, action=action)
+                embed=await create_sniper_action_embed(tier=tier, action=action),
+                ephemeral=True,
             )
         else:
             await interaction.user.remove_roles(
                 discord.Object(id=TIER_SNIPER_ROLES[tier])
             )
             await interaction.response.send_message(
-                embed=await create_sniper_action_embed(tier=tier, action=action)
+                embed=await create_sniper_action_embed(tier=tier, action=action),
+                ephemeral=True,
             )
 
     client.run(BOT_TOKEN)
