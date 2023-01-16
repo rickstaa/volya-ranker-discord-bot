@@ -51,9 +51,15 @@ class RankerBot(Client):
             fighter_number = get_fighter_number(message)
             channel = message.channel
 
+            # Check if the message is a sale or buy.
+            if "listed " in message.embeds[0].description.lower():
+                mention = True
+            else:
+                mention = False
+
             # Post rank, tier and staking rate embed.
             if fighter_number is not None:
-                embed = await create_fighter_rank_embed(fighter_number, RANKS, True)
+                embed = await create_fighter_rank_embed(fighter_number, RANKS, mention)
                 await channel.send(embed=embed)
 
 
