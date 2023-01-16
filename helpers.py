@@ -51,12 +51,21 @@ TIER_SNIPER_ROLES = {
     "common": "1063955086776217690",
 }
 
+TIER_STAKING_REWARDS = {
+    "mythic": 3.3,
+    "legendary": 2.75,
+    "epic": 2.2,
+    "rare": 1.65,
+    "uncommon": 1.10,
+    "common": 0.55,
+}
+
 
 def get_volya_ranks():
-    """Get Volya ranks from solrarity JSON file and correct them for missing 1/1s.
+    """Get VOLYA ranks from Solrarity JSON file and correct them for missing 1/1s.
 
     Returns:
-        dict: Corrected volya ranks.
+        dict: Corrected VOLYA ranks.
     """
 
     # Get SolRanker NFT ranks.
@@ -185,6 +194,14 @@ def get_fighter_rank(rank_dict, fighter_number):
 
 
 def get_tier_sniper_role(tier):
+    """Get tier sniper role.
+
+    Args:
+        tier (str): Rarity tier.
+
+    Returns:
+        string: Sniper mention role string.
+    """    
     try:
         return "@&{}".format(TIER_SNIPER_ROLES[tier.lower()])
     except KeyError:
@@ -217,19 +234,27 @@ def create_not_found_embed(fighter_number):
     )
 
 
-def create_rank_embed(fighter_rank, fighter_tier, mention=False):
+def create_rank_embed(fighter_number, fighter_rank, fighter_tier, mention=False):
     """Create rank embed.
 
     Args:
-        fighter_number (int): Fighter rank.
-        fighter_number (str): Fighter tier.
+        fighter_number (int): Fighter number.
+        fighter_rank (str): Fighter rank.
+        fighter_tier (str): Fighter tier.
         mention (bool, optional): Mention tier sniper role. Defaults to False.
 
     Returns:
         discord.Embed: Rank embed object.
     """
     rank_embed = Embed(
-        title=("🏆・Rank: {} ・ {}".format(fighter_rank, get_tier_emoji(fighter_tier))),
+        title=(
+            "🏆・[#{}]・Rank: {}・Stake reward: `{}`/day ・ {}".format(
+                fighter_number,
+                fighter_rank,
+                TIER_STAKING_REWARDS[fighter_tier.lower()],
+                get_tier_emoji(fighter_tier),
+            )
+        ),
         color=Color.from_str(get_tier_color(fighter_tier)),
     )
     if mention:
@@ -255,7 +280,7 @@ async def create_fighter_rank_embed(fighter_number, ranks_dict, mention=False):
     if fighter_rank is None:  # If not found.
         logging.warning(f"Rank of Fighter `{fighter_number}` not found.")
         return create_not_found_embed(fighter_number)
-    return create_rank_embed(fighter_rank["rank"], fighter_rank["tier"], mention)
+    return create_rank_embed(fighter_number, fighter_rank["rank"], fighter_rank["tier"], mention)
 
 
 async def create_sniper_action_embed(tier, action):

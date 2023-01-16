@@ -32,9 +32,9 @@ class RankerBot(Client):
         """Make sure the bot is ready."""
         logging.debug("Logging in.")
         await self.wait_until_ready()
-        logging.debug("Syncing slash commands.")
 
         # Sync commands to guild.
+        logging.debug("Syncing slash commands.")
         if not self.synced:
             await tree.sync(guild=discord.Object(id=GUILD_ID))
             self.synced = True
@@ -42,7 +42,7 @@ class RankerBot(Client):
         logging.debug(f"Logged on as {self.user}!")
 
     async def on_message(self, message):
-        """Display rank and tier when a ME sale or buy message is sent."""
+        """Display rank, tier and staking rate when a ME sale or buy message is sent."""
         if (
             message.author.bot
             and message.author.name.lower() == ME_BOT_NAME.lower()
@@ -51,7 +51,7 @@ class RankerBot(Client):
             fighter_number = get_fighter_number(message)
             channel = message.channel
 
-            # Post rank and tier embed.
+            # Post rank, tier and staking rate embed.
             if fighter_number is not None:
                 embed = await create_fighter_rank_embed(fighter_number, RANKS, True)
                 await channel.send(embed=embed)
