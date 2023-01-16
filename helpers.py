@@ -305,8 +305,8 @@ async def create_help_embed():
     return Embed(
         title=":question:・Help",
         description=(
-            "A simple bot that can be used to check the rank of your VOLYA Freedom "
-            "Fighter. 🤖💎"
+            "A simple bot that can be used to check the rank, rarity tier and staking "
+            "reward of your VOLYA Freedom Fighter. 🤖💎"
             "\n\n"
             "It uses the rarity calculation provided by "
             "https://solrarity.app/dashboard but is adjusted so that the rarity tier "
