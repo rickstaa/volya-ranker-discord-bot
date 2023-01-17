@@ -69,10 +69,10 @@ def get_volya_ranks():
     """
 
     # Get SolRanker NFT ranks.
-    solrarity_ranks = parse_JSON("./assets/volya_solrarity_ranks.json")
+    solrarity_ranks = load_JSON("./assets/volya_solrarity_ranks.json")
 
     # Get incorrectly ranked NFTs.
-    rank_corrections = parse_JSON("./assets/rank_corrections.json")
+    rank_corrections = load_JSON("./assets/rank_corrections.json")
 
     # Remove incorrectly ranked NFTs.
     for fighter_number in rank_corrections:
@@ -99,20 +99,20 @@ def get_volya_ranks():
         else:
             volya_ranks[fighter]["tier"] = "Common"
 
-    with open("sample.json", "w") as outfile:
-        json.dump(volya_ranks, outfile)
+    # Save corrected ranks.
+    save_JSON(volya_ranks, "./assets/volya_solrarity_ranks_corrected.json")
 
     return volya_ranks
 
 
-def parse_JSON(file):
-    """Parse JSON data.
+def load_JSON(file):
+    """Load JSON data and return as VOLYA fighter ranking object.
 
     Args:
         file (str): JSON file.
 
     Returns:
-        dict: Python dictionary.
+        dict: VOLYA fighter ranking object.
     """
     data = json.load(open(file, "r"))
     parsed_data = {
@@ -120,6 +120,18 @@ def parse_JSON(file):
         for i in range(0, len(data), 1)
     }
     return parsed_data
+
+
+def save_JSON(data, file):
+    """Save VOLYA fighter ranking object as Solrarity ranking data struct.
+
+    Args:
+        data (dict): Python dictionary.
+        file (str): JSON file.
+    """
+    solrarity_data = [fighter for _, fighter in data.items()]
+    with open(file, "w") as outfile:
+        json.dump(solrarity_data, outfile)
 
 
 def get_tier_color(tier):
