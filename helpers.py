@@ -279,14 +279,17 @@ async def create_fighter_rank_embed(fighter_number, ranks_dict):
         ranks_dict (dict): Rank dictionary.
 
     Returns:
-        tuple (discord.Embed, dict): Fighter rank embed message and fighter rank 
+        tuple (discord.Embed, dict): Fighter rank embed message and fighter rank
             dictionary.
     """
     fighter_rank = get_fighter_rank(ranks_dict, fighter_number)
     if fighter_rank is None:  # If not found.
         logging.warning(f"Rank of Fighter `{fighter_number}` not found.")
         return create_not_found_embed(fighter_number)
-    return create_rank_embed(fighter_number, fighter_rank["rank"], fighter_rank["tier"]), fighter_rank
+    return (
+        create_rank_embed(fighter_number, fighter_rank["rank"], fighter_rank["tier"]),
+        fighter_rank,
+    )
 
 
 async def create_sniper_action_embed(tier, action):
