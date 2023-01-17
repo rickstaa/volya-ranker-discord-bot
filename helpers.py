@@ -2,7 +2,7 @@
 
 import json
 import re
-from discord import Embed, Color
+from discord import Embed, Color, Object, utils
 import logging
 from math import floor
 
@@ -308,6 +308,62 @@ async def create_sniper_action_embed(tier, action):
         ),
         color=Color.from_str(get_tier_color(tier)),
     )
+
+
+async def create_sniper_role_present_embed(tier, present):
+    """Create sniper role present embed.
+
+    Args:
+        tier (string): Fighter tier.
+        present (bool): Whether the sniper role is present.
+
+    Returns:
+        discord.Embed: Sniper role (not) present embed.
+    """
+    return Embed(
+        title=":eyes:・`{}` fighter sniper role {} present.".format(
+            tier.capitalize(), "already" if present else "not"
+        ),
+        color=Color.from_str(get_tier_color(tier)),
+    )
+
+
+async def change_sniper_role(interaction, tier, action):
+    """Add or remove tier sniper role.
+
+    Args:
+        interaction (discord.Interaction): Discord interaction object.
+        tier (str): Sniper role tier.
+        action (int): Action to perform on the role. 1 = add, 0 = remove.
+    """
+    role_present = (
+        utils.get(interaction.guild.roles, id=int(TIER_SNIPER_ROLES[tier]))
+        in interaction.user.roles
+    )
+    if action == 1:
+        if not role_present:
+            await interaction.user.add_roles(Object(id=TIER_SNIPER_ROLES[tier]))
+            await interaction.response.send_message(
+                embed=await create_sniper_action_embed(tier=tier, action=action),
+                ephemeral=True,
+            )
+        else:
+            await interaction.response.send_message(
+                embed=await create_sniper_role_present_embed(tier=tier, present=True),
+                ephemeral=True,
+            )
+    else:
+        if role_present:
+            await interaction.user.remove_roles(Object(id=TIER_SNIPER_ROLES[tier]))
+            await interaction.response.send_message(
+                embed=await create_sniper_action_embed(tier=tier, action=action),
+                ephemeral=True,
+            )
+        else:
+            await interaction.response.send_message(
+                embed=await create_sniper_role_present_embed(tier=tier, present=False),
+                ephemeral=True,
+            )
 
 
 async def create_help_embed():

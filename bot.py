@@ -7,12 +7,11 @@ import discord
 from discord import Intents, app_commands, Client, Interaction
 from helpers import (
     create_fighter_rank_embed,
+    change_sniper_role,
     get_fighter_number,
     create_help_embed,
     get_volya_ranks,
-    create_sniper_action_embed,
     get_tier_sniper_role,
-    TIER_SNIPER_ROLES,
 )
 
 GUILD_ID = "947791831582793748"
@@ -134,19 +133,6 @@ if __name__ == "__main__":
         tier: str,
         action: int,
     ):
-        if action == 1:
-            await interaction.user.add_roles(discord.Object(id=TIER_SNIPER_ROLES[tier]))
-            await interaction.response.send_message(
-                embed=await create_sniper_action_embed(tier=tier, action=action),
-                ephemeral=True,
-            )
-        else:
-            await interaction.user.remove_roles(
-                discord.Object(id=TIER_SNIPER_ROLES[tier])
-            )
-            await interaction.response.send_message(
-                embed=await create_sniper_action_embed(tier=tier, action=action),
-                ephemeral=True,
-            )
+        await change_sniper_role(interaction, tier, action)
 
     client.run(BOT_TOKEN)
