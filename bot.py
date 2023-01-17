@@ -11,6 +11,7 @@ from helpers import (
     create_help_embed,
     get_volya_ranks,
     create_sniper_action_embed,
+    get_tier_sniper_role,
     TIER_SNIPER_ROLES,
 )
 
@@ -51,16 +52,26 @@ class RankerBot(Client):
             fighter_number = get_fighter_number(message)
             channel = message.channel
 
-            # Check if the message is a sale or buy.
-            if "listed " in message.embeds[0].description.lower():
-                mention = True
-            else:
-                mention = False
+            # Check if the message is a sale or listing message.
+            try:
+                message.embeds[0].description.lower()
+            except AttributeError:
+                return  # Not a sale or buy message.
+
+            # Add mention if the message is a listing message.
+            mention = (
+                True if "listed" in message.embeds[0].description.lower() else False
+            )
 
             # Post rank, tier and staking rate embed.
             if fighter_number is not None:
-                embed = await create_fighter_rank_embed(fighter_number, RANKS, mention)
-                await channel.send(embed=embed)
+                embed = await create_fighter_rank_embed(fighter_number, RANKS)
+                await channel.send(
+                    content=get_tier_sniper_role("common")
+                    if mention
+                    else "",  # NOTE: Done because pinging in embeds is not supported.
+                    embed=embed,
+                )
 
 
 if __name__ == "__main__":

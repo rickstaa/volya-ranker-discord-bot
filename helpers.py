@@ -213,9 +213,9 @@ def get_tier_sniper_role(tier):
 
     Returns:
         string: Sniper mention role string.
-    """    
+    """
     try:
-        return "@&{}".format(TIER_SNIPER_ROLES[tier.lower()])
+        return "<@&{}>".format(TIER_SNIPER_ROLES[tier.lower()])
     except KeyError:
         return None
 
@@ -246,14 +246,13 @@ def create_not_found_embed(fighter_number):
     )
 
 
-def create_rank_embed(fighter_number, fighter_rank, fighter_tier, mention=False):
+def create_rank_embed(fighter_number, fighter_rank, fighter_tier):
     """Create rank embed.
 
     Args:
         fighter_number (int): Fighter number.
         fighter_rank (str): Fighter rank.
         fighter_tier (str): Fighter tier.
-        mention (bool, optional): Mention tier sniper role. Defaults to False.
 
     Returns:
         discord.Embed: Rank embed object.
@@ -269,20 +268,15 @@ def create_rank_embed(fighter_number, fighter_rank, fighter_tier, mention=False)
         ),
         color=Color.from_str(get_tier_color(fighter_tier)),
     )
-    if mention:
-        rank_embed.add_field(
-            name="", value="<@&{}>".format(TIER_SNIPER_ROLES[fighter_tier.lower()])
-        )
     return rank_embed
 
 
-async def create_fighter_rank_embed(fighter_number, ranks_dict, mention=False):
+async def create_fighter_rank_embed(fighter_number, ranks_dict):
     """Create fighter rank embed message.
 
     Args:
         fighter_number (int): Fighter number.
         ranks_dict (dict): Rank dictionary.
-        mention (bool, optional): Mention tier sniper role. Defaults to False.
 
     Returns:
         discord.Embed: Discord fighter rank embed message or fighter not found embed
@@ -292,7 +286,7 @@ async def create_fighter_rank_embed(fighter_number, ranks_dict, mention=False):
     if fighter_rank is None:  # If not found.
         logging.warning(f"Rank of Fighter `{fighter_number}` not found.")
         return create_not_found_embed(fighter_number)
-    return create_rank_embed(fighter_number, fighter_rank["rank"], fighter_rank["tier"], mention)
+    return create_rank_embed(fighter_number, fighter_rank["rank"], fighter_rank["tier"])
 
 
 async def create_sniper_action_embed(tier, action):
