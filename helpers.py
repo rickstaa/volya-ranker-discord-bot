@@ -205,8 +205,23 @@ def get_fighter_rank(rank_dict, fighter_number):
         return None
 
 
-def get_tier_sniper_role(tier):
-    """Get tier sniper role.
+def get_role_mention(role_id):
+    """Get role mention string.
+
+    Args:
+        role (str): Role id.
+
+    Returns:
+        string: Role mention string.
+    """
+    try:
+        return "<@&{}>".format(role_id)
+    except KeyError:
+        return None
+
+
+def get_tier_sniper_role_mention(tier):
+    """Get tier sniper role mention string.
 
     Args:
         tier (str): Rarity tier.
@@ -215,7 +230,7 @@ def get_tier_sniper_role(tier):
         string: Sniper mention role string.
     """
     try:
-        return "<@&{}>".format(TIER_SNIPER_ROLES[tier.lower()])
+        return get_role_mention(TIER_SNIPER_ROLES[tier.lower()])
     except KeyError:
         return None
 
@@ -271,7 +286,7 @@ def create_rank_embed(fighter_number, fighter_rank, fighter_tier):
     return rank_embed
 
 
-async def create_fighter_rank_embed(fighter_number, ranks_dict):
+def create_fighter_rank_embed(fighter_number, ranks_dict):
     """Create fighter rank embed message.
 
     Args:
@@ -292,7 +307,7 @@ async def create_fighter_rank_embed(fighter_number, ranks_dict):
     )
 
 
-async def create_sniper_action_embed(tier, action):
+def create_sniper_action_embed(tier, action):
     """Create sniper action embed.
 
     Args:
@@ -310,7 +325,7 @@ async def create_sniper_action_embed(tier, action):
     )
 
 
-async def create_sniper_role_present_embed(tier, present):
+def create_sniper_role_present_embed(tier, present):
     """Create sniper role present embed.
 
     Args:
@@ -328,6 +343,35 @@ async def create_sniper_role_present_embed(tier, present):
     )
 
 
+def contains_role(interaction, role_id):
+    """Check if user has a role.
+
+    Args:
+        interaction (discord.Interaction): Discord interaction object.
+        role_id (int): Role ID.
+
+    Returns:
+        bool: Whether the user has the role.
+    """
+    return utils.get(interaction.guild.roles, id=role_id) in interaction.user.roles
+
+
+def get_sniper_roles(interaction):
+    """Get sniper roles.
+
+    Args:
+        interaction (discord.Interaction): Discord interaction object.
+
+    Returns:
+        list: List of sniper roles.
+    """
+    sniper_roles = []
+    for role_id in TIER_SNIPER_ROLES.values():
+        if contains_role(interaction, int(role_id)):
+            sniper_roles.append(role_id)
+    return sniper_roles
+
+
 async def change_sniper_role(interaction, tier, action):
     """Add or remove tier sniper role.
 
@@ -336,37 +380,38 @@ async def change_sniper_role(interaction, tier, action):
         tier (str): Sniper role tier.
         action (int): Action to perform on the role. 1 = add, 0 = remove.
     """
-    role_present = (
-        utils.get(interaction.guild.roles, id=int(TIER_SNIPER_ROLES[tier]))
-        in interaction.user.roles
-    )
     if action == 1:
-        if not role_present:
+        if not contains_role(interaction, TIER_SNIPER_ROLES[tier]):
             await interaction.user.add_roles(Object(id=TIER_SNIPER_ROLES[tier]))
             await interaction.response.send_message(
-                embed=await create_sniper_action_embed(tier=tier, action=action),
+                embed=create_sniper_action_embed(tier=tier, action=action),
                 ephemeral=True,
             )
         else:
             await interaction.response.send_message(
-                embed=await create_sniper_role_present_embed(tier=tier, present=True),
+                embed=create_sniper_role_present_embed(tier=tier, present=True),
                 ephemeral=True,
             )
     else:
-        if role_present:
+        if contains_role(interaction, TIER_SNIPER_ROLES[tier]):
             await interaction.user.remove_roles(Object(id=TIER_SNIPER_ROLES[tier]))
             await interaction.response.send_message(
-                embed=await create_sniper_action_embed(tier=tier, action=action),
+                embed=create_sniper_action_embed(tier=tier, action=action),
                 ephemeral=True,
             )
         else:
             await interaction.response.send_message(
-                embed=await create_sniper_role_present_embed(tier=tier, present=False),
+                embed=create_sniper_role_present_embed(tier=tier, present=False),
                 ephemeral=True,
             )
 
 
-async def create_help_embed():
+def create_help_embed():
+    """Create help embed.
+
+    Returns:
+        discord.Embed: Help embed.
+    """
     return Embed(
         title=":question:・Help",
         description=(
@@ -383,6 +428,29 @@ async def create_help_embed():
             "**Commands**\n"
             "> ⦁ `/rank <fighter_number>`: Get the rank of a fighter.\n"
             "> ⦁ `/sniper <tier> <enable/disable>`: Enable/disable tier sniper role. "
-            "If enabled, you will be mentioned when a specified tier fighter is listed."
+            "If enabled, you will be mentioned when a specified tier fighter is "
+            "listed.\n"
+            "> ⦁ `/config`: Get current bot configuration (i.e. active sniper roles).\n"
+        ),
+    )
+
+
+def create_config_embed(interaction):
+    """_summary_
+
+    Args:
+        interaction (discord.Interaction): Discord interaction object.
+
+    Returns:
+        discord.Embed: Configuration embed.
+    """
+    active_roles = [
+        get_role_mention(role_id) for role_id in get_sniper_roles(interaction)
+    ]
+    return Embed(
+        title=":wrench:・Config",
+        description=(
+            "Current config:\n"
+            "> ⦁ Active sniper roles: {}\n".format(", ".join(active_roles))
         ),
     )

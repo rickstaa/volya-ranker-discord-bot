@@ -11,7 +11,8 @@ from helpers import (
     get_fighter_number,
     create_help_embed,
     get_volya_ranks,
-    get_tier_sniper_role,
+    get_tier_sniper_role_mention,
+    create_config_embed,
 )
 
 GUILD_ID = "947791831582793748"
@@ -64,12 +65,12 @@ class RankerBot(Client):
 
             # Post rank, tier and staking rate embed.
             if fighter_number is not None:
-                embed, rank_dict = await create_fighter_rank_embed(
+                embed, rank_dict = create_fighter_rank_embed(
                     fighter_number, RANKS
                 )
                 await channel.send(
                     # NOTE: Add mention before embed since you cannot ping inside embed.
-                    get_tier_sniper_role(rank_dict["tier"]) if mention else "",
+                    get_tier_sniper_role_mention(rank_dict["tier"]) if mention else "",
                     embed=embed,
                 )
 
@@ -92,7 +93,7 @@ if __name__ == "__main__":
         interaction: Interaction,
     ):
         await interaction.response.send_message(
-            embed=await create_help_embed(), ephemeral=True
+            embed=create_help_embed(), ephemeral=True
         )
 
     # Add rank command.
@@ -105,7 +106,7 @@ if __name__ == "__main__":
         interaction: Interaction,
         tokenid: app_commands.Range[int, 1, 5000],
     ):
-        embed, _ = await create_fighter_rank_embed(tokenid, RANKS)
+        embed, _ = create_fighter_rank_embed(tokenid, RANKS)
         await interaction.response.send_message(embed=embed)
 
     # Add sniper role enable command.
@@ -134,5 +135,18 @@ if __name__ == "__main__":
         action: int,
     ):
         await change_sniper_role(interaction, tier, action)
+
+    # Add config command.
+    @tree.command(
+        name="config",
+        description="Shows the current bot configuration.",
+        guild=discord.Object(id=GUILD_ID),
+    )
+    async def config(
+        interaction: Interaction,
+    ):
+        await interaction.response.send_message(
+            embed=create_config_embed(interaction), ephemeral=True
+        )
 
     client.run(BOT_TOKEN)
