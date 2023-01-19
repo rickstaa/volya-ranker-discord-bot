@@ -353,7 +353,7 @@ def contains_role(interaction, role_id):
     Returns:
         bool: Whether the user has the role.
     """
-    return utils.get(interaction.guild.roles, id=role_id) in interaction.user.roles
+    return utils.get(interaction.guild.roles, id=int(role_id)) in interaction.user.roles
 
 
 def get_sniper_roles(interaction):
